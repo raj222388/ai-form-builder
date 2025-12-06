@@ -61,26 +61,67 @@ export type Database = {
           },
         ]
       }
+      form_submissions: {
+        Row: {
+          form_id: string
+          id: string
+          ip_address: string | null
+          submission_data: Json
+          submitted_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          form_id: string
+          id?: string
+          ip_address?: string | null
+          submission_data: Json
+          submitted_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          form_id?: string
+          id?: string
+          ip_address?: string | null
+          submission_data?: Json
+          submitted_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forms: {
         Row: {
           created_at: string | null
           description: string | null
           id: string
+          is_public: boolean
           name: string
+          public_slug: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           name: string
+          public_slug?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           name?: string
+          public_slug?: string | null
           updated_at?: string | null
         }
         Relationships: []

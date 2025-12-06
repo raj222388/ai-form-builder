@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, FormInput, Layout } from "lucide-react";
+import { Sparkles, FormInput, Layout, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -27,6 +27,9 @@ const Index = () => {
 
     setIsGenerating(true);
     try {
+      // Generate a unique slug for public sharing
+      const slug = `form-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
       // Call edge function to generate fields using AI
       const { data: aiData, error: aiError } = await supabase.functions.invoke(
         "generate-form-fields",
@@ -38,12 +41,14 @@ const Index = () => {
       if (aiError) throw aiError;
       if (!aiData?.fields) throw new Error("No fields generated");
 
-      // Create the form in database
+      // Create the form in database with public_slug
       const { data: formData, error: formError } = await supabase
         .from("forms")
         .insert({
           name: formName.trim(),
           description: `AI-generated ${formName} form`,
+          public_slug: slug,
+          is_public: true,
         })
         .select()
         .single();
@@ -148,7 +153,7 @@ const Index = () => {
         </Card>
 
         {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-6 mt-16 max-w-5xl mx-auto">
           <Card className="p-6 hover:shadow-medium transition-shadow duration-300 backdrop-blur-sm bg-card/95 animate-in fade-in slide-in-from-bottom-7 duration-700 delay-400">
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
               <Sparkles className="w-6 h-6 text-primary" />
@@ -176,6 +181,16 @@ const Index = () => {
             <h3 className="font-semibold mb-2">Instant Preview</h3>
             <p className="text-sm text-muted-foreground">
               See your form come to life in real-time as you build
+            </p>
+          </Card>
+
+          <Card className="p-6 hover:shadow-medium transition-shadow duration-300 backdrop-blur-sm bg-card/95 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-700">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
+              <BarChart3 className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="font-semibold mb-2">Analytics & Export</h3>
+            <p className="text-sm text-muted-foreground">
+              Track submissions and export to PDF or CSV
             </p>
           </Card>
         </div>
