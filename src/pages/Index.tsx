@@ -1,5 +1,7 @@
+import { Sparkles, FormInput, Layout, BarChart3, LogIn, LogOut, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Sparkles, FormInput, Layout, BarChart3 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -14,6 +16,7 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentFormId, setCurrentFormId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
 
   const handleGenerate = async () => {
     if (!formName.trim()) {
@@ -94,6 +97,29 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/30 to-background">
+      {/* Auth Header */}
+      <nav className="absolute top-4 right-4 z-20 flex items-center gap-3">
+        {user ? (
+          <>
+            <span className="text-sm text-muted-foreground flex items-center gap-2">
+              <User className="w-4 h-4" />
+              {user.email}
+            </span>
+            <Button variant="outline" size="sm" onClick={signOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </>
+        ) : (
+          <Link to="/auth">
+            <Button variant="outline" size="sm">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          </Link>
+        )}
+      </nav>
+
       {/* Hero Section */}
       <header 
         className="container mx-auto px-4 py-16 text-center relative"
