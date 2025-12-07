@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       form_fields: {
         Row: {
+          conditional_logic: Json | null
           created_at: string | null
           field_label: string
           field_name: string
@@ -28,6 +29,7 @@ export type Database = {
           required: boolean | null
         }
         Insert: {
+          conditional_logic?: Json | null
           created_at?: string | null
           field_label: string
           field_name: string
@@ -40,6 +42,7 @@ export type Database = {
           required?: boolean | null
         }
         Update: {
+          conditional_logic?: Json | null
           created_at?: string | null
           field_label?: string
           field_name?: string

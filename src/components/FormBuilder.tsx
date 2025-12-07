@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FormPreview } from "./FormPreview";
+import { ConditionalLogicEditor, ConditionalLogic } from "./ConditionalLogicEditor";
 
 interface Field {
   id: string;
@@ -19,6 +20,7 @@ interface Field {
   required: boolean;
   options: string[] | null;
   order_index: number;
+  conditional_logic: ConditionalLogic | null;
 }
 
 interface FormBuilderProps {
@@ -57,7 +59,8 @@ export const FormBuilder = ({ formId, onClose }: FormBuilderProps) => {
       if (fieldsError) throw fieldsError;
       setFields((fieldsData || []).map(f => ({
         ...f,
-        options: f.options as string[] | null
+        options: f.options as string[] | null,
+        conditional_logic: f.conditional_logic as unknown as ConditionalLogic | null
       })));
     } catch (error: any) {
       console.error("Error loading form:", error);
@@ -82,6 +85,7 @@ export const FormBuilder = ({ formId, onClose }: FormBuilderProps) => {
         required: false,
         options: null,
         order_index: fields.length,
+        conditional_logic: null,
       };
 
       const { data, error } = await supabase
@@ -91,7 +95,11 @@ export const FormBuilder = ({ formId, onClose }: FormBuilderProps) => {
         .single();
 
       if (error) throw error;
-      setFields([...fields, { ...data, options: data.options as string[] | null }]);
+      setFields([...fields, { 
+        ...data, 
+        options: data.options as string[] | null,
+        conditional_logic: data.conditional_logic as unknown as ConditionalLogic | null
+      }]);
       
       toast({
         title: "Field added",
@@ -108,9 +116,10 @@ export const FormBuilder = ({ formId, onClose }: FormBuilderProps) => {
 
   const updateField = async (fieldId: string, updates: Partial<Field>) => {
     try {
+      const dbUpdates = { ...updates } as any;
       const { error } = await supabase
         .from("form_fields")
-        .update(updates)
+        .update(dbUpdates)
         .eq("id", fieldId);
 
       if (error) throw error;
@@ -229,6 +238,18 @@ export const FormBuilder = ({ formId, onClose }: FormBuilderProps) => {
                       />
                       <Label className="text-sm">Required field</Label>
                     </div>
+
+                    <ConditionalLogicEditor
+                      fieldId={field.id}
+                      conditionalLogic={field.conditional_logic}
+                      otherFields={fields.map(f => ({
+                        id: f.id,
+                        field_name: f.field_name,
+                        field_label: f.field_label,
+                        field_type: f.field_type,
+                      }))}
+                      onUpdate={(logic) => updateField(field.id, { conditional_logic: logic })}
+                    />
                   </div>
                   <Button
                     variant="ghost"

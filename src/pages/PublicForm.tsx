@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ConditionalLogic, evaluateConditionalLogic } from "@/components/ConditionalLogicEditor";
 
 interface Field {
   id: string;
@@ -20,6 +21,7 @@ interface Field {
   required: boolean;
   options: string[] | null;
   order_index: number;
+  conditional_logic: ConditionalLogic | null;
 }
 
 interface Form {
@@ -82,7 +84,8 @@ const PublicForm = () => {
       if (fieldsError) throw fieldsError;
       setFields((fieldsData || []).map(f => ({
         ...f,
-        options: f.options as string[] | null
+        options: f.options as string[] | null,
+        conditional_logic: f.conditional_logic as unknown as ConditionalLogic | null
       })));
     } catch (err: any) {
       console.error("Error loading form:", err);
@@ -92,13 +95,21 @@ const PublicForm = () => {
     }
   };
 
+  const isFieldVisible = (field: Field): boolean => {
+    return evaluateConditionalLogic(
+      field.conditional_logic,
+      formData,
+      fields.map(f => ({ id: f.id, field_name: f.field_name }))
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
 
-    // Validate required fields
+    // Validate only visible required fields
     for (const field of fields) {
-      if (field.required && !formData[field.field_name]) {
+      if (field.required && isFieldVisible(field) && !formData[field.field_name]) {
         toast({
           title: "Validation Error",
           description: `${field.field_label} is required`,
@@ -267,17 +278,23 @@ const PublicForm = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              {field.field_type !== "checkbox" && (
-                <Label htmlFor={field.field_name}>
-                  {field.field_label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
-                </Label>
-              )}
-              {renderField(field)}
-            </div>
-          ))}
+          {fields.map((field) => {
+            const isVisible = isFieldVisible(field);
+            
+            if (!isVisible) return null;
+            
+            return (
+              <div key={field.id} className="space-y-2">
+                {field.field_type !== "checkbox" && (
+                  <Label htmlFor={field.field_name}>
+                    {field.field_label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                {renderField(field)}
+              </div>
+            );
+          })}
           
           <Button
             type="submit"
